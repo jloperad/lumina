@@ -38,7 +38,7 @@ export default async function FilmClubHome() {
       </section>
 
       <section>
-        <h2 className="text-2xl font-bold mb-6">Movies We've Watched</h2>
+        <h2 className="text-2xl font-bold mb-6">Movies We&apos;ve Watched</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {watchedMovies.map((movie) => (
             <Link href={`/movies/${movie.id}`} key={movie.id}>
