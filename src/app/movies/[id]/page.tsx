@@ -1,29 +1,57 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { getMovieDetails, fetchWatchedMovies, WatchedMovie } from '@/services/movieApi';
+
+type Movie = {
+  id: number;
+  title: string;
+  rating: number;
+  imageUrl: string;
+  description: string;
+  director: string;
+  year: string;
+  genre: string;
+  watchDate?: string;
+}
 
 export default function MovieDetails({ params }: { params: { id: string } }) {
-  const [comments, setComments] = useState<Array<{ name: string; comment: string }>>([])
-  const [name, setName] = useState('')
-  const [comment, setComment] = useState('')
+  const [movie, setMovie] = useState<Movie | null>(null);
+  const [comments, setComments] = useState<Array<{ name: string; comment: string }>>([]);
+  const [name, setName] = useState('');
+  const [comment, setComment] = useState('');
 
-  // Mock movie data (in a real app, you'd fetch this based on the ID)
-  const movie = {
-    id: params.id,
-    title: "Inception",
-    rating: 4.5,
-    image: "/placeholder.svg?height=300&width=200",
-    watchDate: "2023-05-15",
-    description: "A thief who enters the dreams of others to steal secrets from their subconscious.",
-    director: "Christopher Nolan",
-    year: "2010",
-    genre: "Sci-Fi, Action, Thriller"
-  }
+  useEffect(() => {
+    const fetchMovieData = async () => {
+      try {
+        const watchedMovies = fetchWatchedMovies();
+        const watchedMovie = watchedMovies.find(m => m.id === parseInt(params.id));
+        const tmdbMovie = await getMovieDetails(params.id);
+
+        setMovie({
+          id: tmdbMovie.id,
+          title: tmdbMovie.title,
+          rating: watchedMovie ? watchedMovie.rating : tmdbMovie.vote_average,
+          imageUrl: `https://image.tmdb.org/t/p/w500${tmdbMovie.poster_path}`,
+          description: tmdbMovie.overview,
+          director: tmdbMovie.credits?.crew.find(person => person.job === "Director")?.name || "Unknown",
+          year: new Date(tmdbMovie.release_date).getFullYear().toString(),
+          genre: tmdbMovie.genres.map((g: any) => g.name).join(', '),
+          watchDate: watchedMovie ? watchedMovie.watchDate : undefined
+        });
+      } catch (error) {
+        console.error("Error fetching movie details:", error);
+        // Handle error (e.g., set an error state, show an error message)
+      }
+    };
+
+    fetchMovieData();
+  }, [params.id]);
 
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,6 +62,10 @@ export default function MovieDetails({ params }: { params: { id: string } }) {
     }
   }
 
+  if (!movie) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <main className="container mx-auto px-4 py-8">
       <Card className="bg-gray-800 mb-8">
@@ -41,10 +73,10 @@ export default function MovieDetails({ params }: { params: { id: string } }) {
           <div className="flex flex-col md:flex-row">
             <div className="md:w-1/3 mb-4 md:mb-0 md:pr-6">
               <Image 
-                src={movie.image} 
+                src={movie.imageUrl} 
                 alt={movie.title} 
-                width={200} 
-                height={300} 
+                width={300} 
+                height={450} 
                 className="w-full h-auto rounded-lg shadow-lg"
               />
             </div>
@@ -56,7 +88,9 @@ export default function MovieDetails({ params }: { params: { id: string } }) {
                 <span>{movie.rating.toFixed(1)}</span>
               </div>
               <p className="mb-4">{movie.description}</p>
-              <p className="text-gray-400">Watched by Film Club on: {movie.watchDate}</p>
+              {movie.watchDate && (
+                <p className="text-gray-400">Watched by Film Club on: {movie.watchDate}</p>
+              )}
             </div>
           </div>
         </CardContent>
