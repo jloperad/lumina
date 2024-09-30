@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { fetchWatchedMovies, WatchedMovie } from '@/services/movieApi';
+import { fetchWatchedMovies} from '@/services/movieApi';
 
 // Define a type for the watched movie data
 

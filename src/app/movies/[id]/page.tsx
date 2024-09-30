@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { getMovieDetails, fetchWatchedMovies, WatchedMovie } from '@/services/movieApi';
+import { getMovieDetails, fetchWatchedMovies} from '@/services/movieApi';
 
 type Movie = {
   id: number;
@@ -18,6 +18,16 @@ type Movie = {
   year: string;
   genre: string;
   watchDate?: string;
+}
+
+interface CrewMember {
+  job: string;
+  name: string;
+}
+
+interface Genre {
+  id: number;
+  name: string;
 }
 
 export default function MovieDetails({ params }: { params: { id: string } }) {
@@ -39,9 +49,9 @@ export default function MovieDetails({ params }: { params: { id: string } }) {
           rating: watchedMovie ? watchedMovie.rating : tmdbMovie.vote_average,
           imageUrl: `https://image.tmdb.org/t/p/w500${tmdbMovie.poster_path}`,
           description: tmdbMovie.overview,
-          director: tmdbMovie.credits?.crew.find(person => person.job === "Director")?.name || "Unknown",
+          director: tmdbMovie.credits?.crew.find((person: CrewMember) => person.job === "Director")?.name || "Unknown",
           year: new Date(tmdbMovie.release_date).getFullYear().toString(),
-          genre: tmdbMovie.genres.map((g: any) => g.name).join(', '),
+          genre: tmdbMovie.genres.map((g: Genre) => g.name).join(', '),
           watchDate: watchedMovie ? watchedMovie.watchDate : undefined
         });
       } catch (error) {
