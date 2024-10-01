@@ -7,8 +7,8 @@ export default function Header() {
         <Link href="/" className="text-2xl font-bold">Lumina Film Club</Link>
         <nav>
           <ul className="flex space-x-4">
-            <li><Link href="/upcoming" className="hover:text-gray-300">Upcoming Movies</Link></li>
-            <li><Link href="/suggest" className="hover:text-gray-300">Suggest a Movie</Link></li>
+            <li><Link href="/upcoming" className="hover:text-gray-300">Próximos Estrenos</Link></li>
+            <li><Link href="/suggest" className="hover:text-gray-300">Sugerir una Película</Link></li>
           </ul>
         </nav>
       </div>

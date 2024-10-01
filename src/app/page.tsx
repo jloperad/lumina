@@ -13,15 +13,15 @@ export default async function FilmClubHome() {
   return (
     <main className="container mx-auto px-4 py-12">
       <section className="mb-16 text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Film Club</h1>
+        <h1 className="text-4xl font-bold mb-4">Bienvenido a Lumina Film Club</h1>
         <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
-          Join us weekly to explore cinematic masterpieces, from timeless classics to contemporary gems.
+          Únete a nosotros semanalmente para explorar las obras maestras del cine, desde clásicos eternos hasta gemas contemporáneas.
         </p>
-        <Button size="lg">Join Now</Button>
+        <Button size="lg">Únete ahora</Button>
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-8 text-center">Recently Watched</h2>
+        <h2 className="text-2xl font-semibold mb-8 text-center">Vistos recientemente</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {watchedMovies.map((movie) => (
             <Link href={`/movies/${movie.id}`} key={movie.id} className="group">
@@ -42,7 +42,7 @@ export default async function FilmClubHome() {
                           <span className="text-yellow-400 mr-1">★</span>
                           <span className="text-white">{movie.rating.toFixed(1)}</span>
                         </div>
-                        <p className="text-sm text-gray-300 mt-1">Watched: {movie.watchDate}</p>
+                        <p className="text-sm text-gray-300 mt-1">Vista en: {movie.watchDate}</p>
                       </div>
                     </div>
                   </div>

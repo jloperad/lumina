@@ -23,7 +23,7 @@ export default function RootLayout({
         </div>
         <footer className="bg-gray-800 py-4 mt-12">
           <div className="container mx-auto px-4 text-center">
-            <p>&copy; 2023 Lumina Film Club. All rights reserved.</p>
+            <p>&copy; 2024 Lumina Film Club. Todos los derechos reservados.</p>
           </div>
         </footer>
       </body>

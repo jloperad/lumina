@@ -19,17 +19,17 @@ export default function UpcomingMovies() {
     <div className="min-h-screen bg-gray-900 text-gray-100">
 
       <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Upcoming Movies</h1>
+        <h1 className="text-3xl font-bold mb-6">Proximas Peliculas</h1>
 
         <Tabs defaultValue="planned" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="planned">Planned Movies</TabsTrigger>
-            <TabsTrigger value="suggested">Suggested Movies</TabsTrigger>
+            <TabsTrigger value="planned">Peliculas Planeadas</TabsTrigger>
+            <TabsTrigger value="suggested">Peliculas Sugeridas</TabsTrigger>
           </TabsList>
           <TabsContent value="planned">
             <Card className="bg-gray-800">
               <CardHeader>
-                <CardTitle>Planned Movies</CardTitle>
+                <CardTitle>Peliculas Planeadas</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -49,7 +49,7 @@ export default function UpcomingMovies() {
           <TabsContent value="suggested">
             <Card className="bg-gray-800">
               <CardHeader>
-                <CardTitle>Suggested Movies</CardTitle>
+                <CardTitle>Peliculas Sugeridas</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
