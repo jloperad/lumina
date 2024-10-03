@@ -8,7 +8,7 @@ import { fetchWatchedMovies} from '@/services/movieApi';
 
 
 export default async function FilmClubHome() {
-  const watchedMovies = fetchWatchedMovies();
+  const watchedMovies = await fetchWatchedMovies();
 
   return (
     <main className="container mx-auto px-4 py-12">
@@ -24,7 +24,7 @@ export default async function FilmClubHome() {
         <h2 className="text-2xl font-semibold mb-8 text-center">Vistos recientemente</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {watchedMovies.map((movie) => (
-            <Link href={`/movies/${movie.id}`} key={movie.id} className="group">
+            <Link href={`/movies/${movie.tmdbId}`} key={movie.tmdbId} className="group">
               <Card className="bg-gray-800 border-0 overflow-hidden transition-transform transform hover:scale-105">
                 <CardContent className="p-0">
                   <div className="relative">

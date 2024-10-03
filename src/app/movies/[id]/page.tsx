@@ -39,7 +39,7 @@ export default function MovieDetails({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchMovieData = async () => {
       try {
-        const watchedMovies = fetchWatchedMovies();
+        const watchedMovies = await fetchWatchedMovies();
         const watchedMovie = watchedMovies.find(m => m.id === parseInt(params.id));
         const tmdbMovie = await getMovieDetails(params.id);
 
