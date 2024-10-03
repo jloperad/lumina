@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { supabase } from '@/lib/supabaseClient';
 
-const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+const API_KEY = process.env.TMDB_API_KEY;
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 const movieApi = axios.create({
