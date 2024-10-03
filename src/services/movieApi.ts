@@ -68,11 +68,16 @@ export type SearchMovie = {
   id: number;
   tmdbId: number;
   title: string;
+  vote_average: number;
+  poster_path: string | null;
+  overview: string;
+  release_date: string;
+  genre_ids: number[];
   rating: number;
   imageUrl: string;
   watchDate: string;
-  description?: string;
-  director?: string;
+  description: string;
+  director: string;
   year?: number;
   genre?: string;
 };
@@ -83,7 +88,7 @@ export async function searchMovies(query: string, year?: string): Promise<Search
       params: {
         query,
         include_adult: false,
-        year: year || undefined, // Include year if provided
+        year: year || undefined,
       },
     });
 
@@ -101,11 +106,16 @@ export async function searchMovies(query: string, year?: string): Promise<Search
       imageUrl: movie.poster_path
         ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
         : '/placeholder.svg?height=300&width=200',
-      watchDate: '', // Not applicable for search results
+      watchDate: '',
       description: movie.overview,
-      director: '', // To be fetched separately if needed
+      director: '',
       year: movie.release_date ? parseInt(movie.release_date.split('-')[0]) : undefined,
       genre: movie.genre_ids ? movie.genre_ids.join(', ') : undefined,
+      vote_average: movie.vote_average,
+      poster_path: movie.poster_path,
+      overview: movie.overview,
+      release_date: movie.release_date,
+      genre_ids: movie.genre_ids,
     }));
 
     return searchResults;
