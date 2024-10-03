@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getSupabaseClient } from '@/lib/supabaseClient';
 
-const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+const API_KEY = process.env.TMDB_API_KEY;
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 const movieApi = axios.create({
@@ -41,17 +41,17 @@ export async function fetchWatchedMovies(): Promise<WatchedMovie[]> {
     return [];
   }
 
-  const watchedMovies: WatchedMovie[] = data.map((movie) => ({
-    id: movie.id,
-    tmdbId: movie.tmdb_id,
-    title: movie.title,
-    rating: movie.rating,
-    imageUrl: movie.image_url,
-    watchDate: movie.watch_date,
-    description: movie.description,
-    director: movie.director,
-    year: movie.year,
-    genre: movie.genre,
+  const watchedMovies: WatchedMovie[] = data.map((movie): WatchedMovie => ({
+    id: Number(movie.id),
+    tmdbId: Number(movie.tmdb_id),
+    title: String(movie.title),
+    rating: Number(movie.rating),
+    imageUrl: String(movie.image_url),
+    watchDate: String(movie.watch_date),
+    description: String(movie.description),
+    director: String(movie.director),
+    year: Number(movie.year),
+    genre: String(movie.genre),
   }));
 
   return watchedMovies;
@@ -75,7 +75,13 @@ export type SearchMovie = {
   overview: string;
   release_date: string;
   genre_ids: number[];
-  // ... other properties from the previous definition
+  rating: number;
+  imageUrl: string;
+  watchDate: string;
+  description: string;
+  director: string;
+  year?: number;
+  genre?: string;
 };
 
 export async function searchMovies(query: string, year?: string): Promise<SearchMovie[]> {
