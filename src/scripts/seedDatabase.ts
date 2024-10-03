@@ -39,7 +39,7 @@ async function seedDatabase() {
   const supabase = await getSupabaseClient();
 
   for (const movie of watchedMovies) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('movies')
       .upsert({
         tmdb_id: movie.id,
