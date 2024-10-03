@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { supabase } from '@/lib/supabaseClient';
+import { getSupabaseClient } from '@/lib/supabaseClient';
 
-const API_KEY = process.env.TMDB_API_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 const movieApi = axios.create({
@@ -25,6 +25,8 @@ export type WatchedMovie = {
 };
 
 export async function fetchWatchedMovies(): Promise<WatchedMovie[]> {
+  const supabase = await getSupabaseClient();
+  
   const { data, error } = await supabase
     .from('movies')
     .select('*')
@@ -73,13 +75,7 @@ export type SearchMovie = {
   overview: string;
   release_date: string;
   genre_ids: number[];
-  rating: number;
-  imageUrl: string;
-  watchDate: string;
-  description: string;
-  director: string;
-  year?: number;
-  genre?: string;
+  // ... other properties from the previous definition
 };
 
 export async function searchMovies(query: string, year?: string): Promise<SearchMovie[]> {

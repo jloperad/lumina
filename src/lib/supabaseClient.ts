@@ -1,6 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
+let supabaseClient: ReturnType<typeof createClient>;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export async function getSupabaseClient() {
+  if (!supabaseClient) {
+    const response = await fetch('/api/supabase-config');
+    const { supabaseUrl, supabaseAnonKey } = await response.json();
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+  }
+  return supabaseClient;
+}

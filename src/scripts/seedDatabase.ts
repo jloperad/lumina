@@ -1,17 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/lib/supabaseClient';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('Supabase URL or Key is missing');
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const watchedMovies = [
   { id: 27205, title: "Inception", rating: 4.5, imageUrl: "https://image.tmdb.org/t/p/w200/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg", watchDate: "2023-05-15", year: 2010 },
@@ -45,34 +35,29 @@ const watchedMovies = [
   { id: 696374, title: "The Batman", rating: 4.1, imageUrl: "https://image.tmdb.org/t/p/w200/74xTEgt7R36Fpooo50r9T25onhq.jpg", watchDate: "2024-07-15", year: 2022 },
 ];
 
-const seedDatabase = async () => {
-  // Convert watchedMovies to the format expected by the database
-  const movies = watchedMovies.map(movie => ({
-    tmdb_id: movie.id,
-    title: movie.title,
-    rating: movie.rating * 2, // Convert 5-star rating to 10-star rating
-    image_url: movie.imageUrl,
-    watch_date: movie.watchDate,
-    // Add placeholder values for missing fields
-    description: "Description placeholder",
-    director: "Director placeholder",
-    year: movie.year,
-    genre: "Genre placeholder"
-  }));
+async function seedDatabase() {
+  const supabase = await getSupabaseClient();
 
-  // Insert movies
-  const { data: moviesData, error: moviesError } = await supabase
-    .from('movies')
-    .upsert(movies, { onConflict: 'tmdb_id' })
-    .select();
+  for (const movie of watchedMovies) {
+    const { data, error } = await supabase
+      .from('movies')
+      .upsert({
+        tmdb_id: movie.id,
+        title: movie.title,
+        rating: movie.rating,
+        image_url: movie.imageUrl,
+        watch_date: movie.watchDate,
+        year: movie.year
+      }, { onConflict: 'tmdb_id' });
 
-  if (moviesError) {
-    console.error('Error inserting movies:', moviesError);
-    return;
+    if (error) {
+      console.error(`Error inserting movie ${movie.title}:`, error);
+    } else {
+      console.log(`Successfully inserted/updated movie: ${movie.title}`);
+    }
   }
+}
 
-  console.log('Movies inserted:', moviesData);
-  console.log('Database seeding completed successfully!');
-};
-
-seedDatabase();
+seedDatabase()
+  .then(() => console.log('Database seeding completed'))
+  .catch((error) => console.error('Error seeding database:', error));
