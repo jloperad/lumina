@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 
 const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 const BASE_URL = 'https://api.themoviedb.org/3';
@@ -63,5 +64,114 @@ export const getMovieDetails = async (id: string) => {
   });
   return response.data;
 };
+
+export type SearchMovie = {
+  id: number;
+  tmdbId: number;
+  title: string;
+  rating: number;
+  imageUrl: string;
+  watchDate: string;
+  description?: string;
+  director?: string;
+  year?: number;
+  genre?: string;
+};
+
+export async function searchMovies(query: string, year?: string): Promise<SearchMovie[]> {
+  try {
+    const response = await movieApi.get('/search/movie', {
+      params: {
+        query,
+        include_adult: false,
+        year: year || undefined, // Include year if provided
+      },
+    });
+
+    const data = response.data.results;
+
+    if (!data) {
+      return [];
+    }
+
+    const searchResults: SearchMovie[] = data.map((movie: any) => ({
+      id: movie.id,
+      tmdbId: movie.id,
+      title: movie.title,
+      rating: movie.vote_average,
+      imageUrl: movie.poster_path
+        ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+        : '/placeholder.svg?height=300&width=200',
+      watchDate: '', // Not applicable for search results
+      description: movie.overview,
+      director: '', // To be fetched separately if needed
+      year: movie.release_date ? parseInt(movie.release_date.split('-')[0]) : undefined,
+      genre: movie.genre_ids ? movie.genre_ids.join(', ') : undefined,
+    }));
+
+    return searchResults;
+  } catch (error) {
+    console.error('Error searching movies:', error);
+    throw new Error('Failed to search movies');
+  }
+}
+
+export async function saveSuggestion(suggestion: {
+  name: string;
+  movie: SearchMovie;
+  reason: string;
+}) {
+  try {
+    // First, check if the movie already exists in the movies table
+    let { data: existingMovie, error: fetchError } = await supabase
+      .from('movies')
+      .select('id')
+      .eq('tmdb_id', suggestion.movie.tmdbId)
+      .single()
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      throw fetchError;
+    }
+
+    let movieId: number;
+
+    if (!existingMovie) {
+      // If the movie doesn't exist, insert it into the movies table
+      const { data: newMovie, error: insertError } = await supabase
+        .from('movies')
+        .insert({
+          tmdb_id: suggestion.movie.tmdbId,
+          title: suggestion.movie.title,
+          rating: suggestion.movie.rating,
+          image_url: suggestion.movie.imageUrl,
+          description: suggestion.movie.description,
+          year: suggestion.movie.year,
+          genre: suggestion.movie.genre,
+        })
+        .select('id')
+        .single()
+
+      if (insertError) throw insertError;
+      movieId = newMovie!.id;
+    } else {
+      movieId = existingMovie.id;
+    }
+
+    // Now insert the suggestion into the suggested_movies table
+    const { data, error } = await supabase
+      .from('suggested_movies')
+      .insert({
+        movie_id: movieId,
+        suggested_by: suggestion.name,
+        reason: suggestion.reason,
+      })
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error saving suggestion:', error);
+    throw new Error('Failed to save suggestion');
+  }
+}
 
 export default movieApi;

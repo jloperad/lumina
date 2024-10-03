@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { searchMovies, SearchMovie, saveSuggestion } from '@/services/movieApi'
 
 export default function SuggestMovie() {
   const [name, setName] = useState('')
@@ -19,30 +19,46 @@ export default function SuggestMovie() {
   const [submitted, setSubmitted] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
   const [currentOption, setCurrentOption] = useState(0)
+  const [movieOptions, setMovieOptions] = useState<SearchMovie[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Mock movie options (in a real app, these would come from an API)
-  const movieOptions = [
-    { title: "Inception", year: "2010", image: "/placeholder.svg?height=300&width=200" },
-    { title: "The Shawshank Redemption", year: "1994", image: "/placeholder.svg?height=300&width=200" },
-    { title: "The Godfather", year: "1972", image: "/placeholder.svg?height=300&width=200" },
-  ]
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (name && movie && reason) {
-      // In a real application, you would send this data to your backend and fetch movie options
-      console.log({ name, movie, year, reason })
-      setSubmitted(true)
-      toast.success('Búsqueda de sugerencia de película...')
+      setIsLoading(true)
+      try {
+        const searchResults = await searchMovies(movie, year)
+        if (searchResults.length > 0) {
+          setMovieOptions(searchResults)
+          setSubmitted(true)
+          toast.success('Búsqueda de sugerencia de película completada')
+        } else {
+          toast.warning('No se encontraron películas. Por favor, intente con otro título.')
+        }
+      } catch (error) {
+        console.error('Error searching movies:', error)
+        toast.error('Error al buscar películas. Por favor, inténtelo de nuevo.')
+      } finally {
+        setIsLoading(false)
+      }
     } else {
       toast.error('Por favor, complete todos los campos requeridos')
     }
   }
 
-  const handleConfirm = () => {
-    // In a real application, you would finalize the submission here
-    setConfirmed(true)
-    toast.success('¡Sugerencia confirmada!')
+  const handleConfirm = async () => {
+    try {
+      await saveSuggestion({
+        name,
+        movie: movieOptions[currentOption],
+        reason,
+      })
+      setConfirmed(true)
+      toast.success('¡Sugerencia confirmada y guardada!')
+    } catch (error) {
+      console.error('Error saving suggestion:', error)
+      toast.error('Error al guardar la sugerencia. Por favor, inténtelo de nuevo.')
+    }
   }
 
   const handleCancel = () => {
@@ -116,7 +132,9 @@ export default function SuggestMovie() {
                   className="bg-gray-800 border-0 focus:ring-2 focus:ring-blue-500 min-h-[100px]"
                 />
               </div>
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Enviar Sugerencia</Button>
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+                {isLoading ? 'Buscando...' : 'Enviar Sugerencia'}
+              </Button>
             </form>
           </div>
         ) : confirmed ? (
@@ -144,7 +162,7 @@ export default function SuggestMovie() {
                 </Button>
                 <div className="flex-1 flex justify-center">
                   <Image
-                    src={movieOptions[currentOption].image}
+                    src={movieOptions[currentOption].imageUrl}
                     alt={movieOptions[currentOption].title}
                     width={200}
                     height={300}
