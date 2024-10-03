@@ -8,16 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
 
-export default function SuggestMovie() {
+export function Page() {
   const [name, setName] = useState('')
   const [movie, setMovie] = useState('')
   const [year, setYear] = useState('')
   const [reason, setReason] = useState('')
   const [submitted, setSubmitted] = useState(false)
-  const [confirmed, setConfirmed] = useState(false)
   const [currentOption, setCurrentOption] = useState(0)
 
   // Mock movie options (in a real app, these would come from an API)
@@ -33,16 +30,17 @@ export default function SuggestMovie() {
       // In a real application, you would send this data to your backend and fetch movie options
       console.log({ name, movie, year, reason })
       setSubmitted(true)
-      toast.success('Búsqueda de sugerencia de película...')
-    } else {
-      toast.error('Por favor, complete todos los campos requeridos')
     }
   }
 
   const handleConfirm = () => {
     // In a real application, you would finalize the submission here
-    setConfirmed(true)
-    toast.success('¡Sugerencia confirmada!')
+    setName('')
+    setMovie('')
+    setYear('')
+    setReason('')
+    setSubmitted(false)
+    setCurrentOption(0)
   }
 
   const handleCancel = () => {
@@ -58,27 +56,22 @@ export default function SuggestMovie() {
     setCurrentOption((prev) => (prev - 1 + movieOptions.length) % movieOptions.length)
   }
 
-  const handleSuggestAnother = () => {
-    setName('')
-    setMovie('')
-    setYear('')
-    setReason('')
-    setSubmitted(false)
-    setConfirmed(false)
-    setCurrentOption(0)
-  }
-
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
+      <header className="py-6 border-b border-gray-800">
+        <div className="container mx-auto px-4">
+          <Link href="/" className="text-2xl font-semibold">Film Club</Link>
+        </div>
+      </header>
 
       <main className="container mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold mb-8 text-center">Sugerir una Película</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center">Suggest a Movie</h1>
 
         {!submitted ? (
           <div className="max-w-md mx-auto space-y-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium text-gray-300">Tu Nombre</Label>
+                <Label htmlFor="name" className="text-sm font-medium text-gray-300">Your Name</Label>
                 <Input
                   id="name"
                   value={name}
@@ -88,7 +81,7 @@ export default function SuggestMovie() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="movie" className="text-sm font-medium text-gray-300">Título de la Película</Label>
+                <Label htmlFor="movie" className="text-sm font-medium text-gray-300">Movie Title</Label>
                 <Input
                   id="movie"
                   value={movie}
@@ -98,7 +91,7 @@ export default function SuggestMovie() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="year" className="text-sm font-medium text-gray-300">Año (Opcional)</Label>
+                <Label htmlFor="year" className="text-sm font-medium text-gray-300">Year (Optional)</Label>
                 <Input
                   id="year"
                   value={year}
@@ -107,7 +100,7 @@ export default function SuggestMovie() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reason" className="text-sm font-medium text-gray-300">Razón para Sugerir</Label>
+                <Label htmlFor="reason" className="text-sm font-medium text-gray-300">Reason for Suggestion</Label>
                 <Textarea
                   id="reason"
                   value={reason}
@@ -116,16 +109,8 @@ export default function SuggestMovie() {
                   className="bg-gray-800 border-0 focus:ring-2 focus:ring-blue-500 min-h-[100px]"
                 />
               </div>
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Enviar Sugerencia</Button>
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Submit Suggestion</Button>
             </form>
-          </div>
-        ) : confirmed ? (
-          <div className="max-w-md mx-auto bg-gray-800 p-6 rounded-lg shadow-lg text-center">
-            <h2 className="text-2xl font-semibold mb-4">¡Gracias por su sugerencia!</h2>
-            <p className="mb-6">Su recomendación de "{movieOptions[currentOption].title}" ha sido registrada.</p>
-            <Button onClick={handleSuggestAnother} className="bg-blue-600 hover:bg-blue-700">
-              Recomendar otra vez
-            </Button>
           </div>
         ) : (
           <div className="max-w-md mx-auto bg-gray-800 p-6 rounded-lg shadow-lg relative">
@@ -134,13 +119,13 @@ export default function SuggestMovie() {
               className="absolute top-2 right-2 p-2 bg-transparent hover:bg-gray-700 rounded-full"
             >
               <X className="h-5 w-5" />
-              <span className="sr-only">Cancelar</span>
+              <span className="sr-only">Cancel</span>
             </Button>
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <Button onClick={handlePrevious} className="p-2 bg-gray-700 hover:bg-gray-600 rounded-full">
                   <ChevronLeft className="h-6 w-6" />
-                  <span className="sr-only">Opción anterior</span>
+                  <span className="sr-only">Previous option</span>
                 </Button>
                 <div className="flex-1 flex justify-center">
                   <Image
@@ -153,20 +138,24 @@ export default function SuggestMovie() {
                 </div>
                 <Button onClick={handleNext} className="p-2 bg-gray-700 hover:bg-gray-600 rounded-full">
                   <ChevronRight className="h-6 w-6" />
-                  <span className="sr-only">Siguiente opción</span>
+                  <span className="sr-only">Next option</span>
                 </Button>
               </div>
               <div className="text-center">
                 <h2 className="text-2xl font-semibold">{movieOptions[currentOption].title}</h2>
                 <p className="text-gray-400 mt-1">{movieOptions[currentOption].year}</p>
               </div>
-              <Button onClick={handleConfirm} className="w-full bg-green-600 hover:bg-green-700">Confirmar Sugerencia</Button>
+              <Button onClick={handleConfirm} className="w-full bg-green-600 hover:bg-green-700">Confirm Suggestion</Button>
             </div>
           </div>
         )}
       </main>
 
-      <ToastContainer position="bottom-right" theme="dark" />
+      <footer className="py-6 border-t border-gray-800 mt-12">
+        <div className="container mx-auto px-4 text-center text-gray-400">
+          <p>&copy; 2023 Film Club. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   )
 }
