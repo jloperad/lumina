@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { supabase } from '@/lib/supabaseClient';
-import { createClient } from '@supabase/supabase-js';
 
 const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 const BASE_URL = 'https://api.themoviedb.org/3';
@@ -94,7 +93,7 @@ export async function searchMovies(query: string, year?: string): Promise<Search
       return [];
     }
 
-    const searchResults: SearchMovie[] = data.map((movie: any) => ({
+    const searchResults: SearchMovie[] = data.map((movie: SearchMovie) => ({
       id: movie.id,
       tmdbId: movie.id,
       title: movie.title,
@@ -123,7 +122,7 @@ export async function saveSuggestion(suggestion: {
 }) {
   try {
     // First, check if the movie already exists in the movies table
-    let { data: existingMovie, error: fetchError } = await supabase
+    const { data: existingMovie, error: fetchError } = await supabase
       .from('movies')
       .select('id')
       .eq('tmdb_id', suggestion.movie.tmdbId)

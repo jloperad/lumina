@@ -140,7 +140,7 @@ export default function SuggestMovie() {
         ) : confirmed ? (
           <div className="max-w-md mx-auto bg-gray-800 p-6 rounded-lg shadow-lg text-center">
             <h2 className="text-2xl font-semibold mb-4">¡Gracias por su sugerencia!</h2>
-            <p className="mb-6">Su recomendación de "{movieOptions[currentOption].title}" ha sido registrada.</p>
+            <p className="mb-6">Su recomendación de &quot;{movieOptions[currentOption].title}&quot; ha sido registrada.</p>
             <Button onClick={handleSuggestAnother} className="bg-blue-600 hover:bg-blue-700">
               Recomendar otra vez
             </Button>
