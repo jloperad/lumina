@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getSupabaseClient } from '@/lib/supabaseClient';
 
-const API_KEY = process.env.TMDB_API_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 const movieApi = axios.create({
@@ -134,6 +134,7 @@ export async function saveSuggestion(suggestion: {
 }) {
   try {
     // First, check if the movie already exists in the movies table
+    const supabase = await getSupabaseClient();
     const { data: existingMovie, error: fetchError } = await supabase
       .from('movies')
       .select('id')
@@ -163,9 +164,9 @@ export async function saveSuggestion(suggestion: {
         .single()
 
       if (insertError) throw insertError;
-      movieId = newMovie!.id;
+      movieId = newMovie!.id as number;
     } else {
-      movieId = existingMovie.id;
+      movieId = existingMovie.id as number;
     }
 
     // Now insert the suggestion into the suggested_movies table
