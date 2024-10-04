@@ -30,6 +30,7 @@ export async function fetchWatchedMovies(): Promise<WatchedMovie[]> {
   const { data, error } = await supabase
     .from('movies')
     .select('*')
+    .not('watch_date', 'is', null)
     .order('watch_date', { ascending: false });
 
   if (error) {
