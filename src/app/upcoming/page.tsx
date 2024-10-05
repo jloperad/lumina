@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChevronLeft, ChevronRight, ThumbsUp, Star } from 'lucide-react'
+import { fetchSuggestedMovies, updateSuggestionVote, SuggestedMovie } from '@/services/movieApi'
 
 const upcomingMovies = [
   { 
@@ -34,21 +34,24 @@ const upcomingMovies = [
   },
 ]
 
-const initialSuggestedMovies = [
-  { id: 1, title: "The French Dispatch", year: "2021", score: 7.2, upvotes: 15, image: "/placeholder.svg?height=300&width=200" },
-  { id: 2, title: "Dune", year: "2021", score: 8.0, upvotes: 28, image: "/placeholder.svg?height=300&width=200" },
-  { id: 3, title: "No Time to Die", year: "2021", score: 7.3, upvotes: 22, image: "/placeholder.svg?height=300&width=200" },
-  { id: 4, title: "The Power of the Dog", year: "2021", score: 6.9, upvotes: 10, image: "/placeholder.svg?height=300&width=200" },
-  { id: 5, title: "Spencer", year: "2021", score: 6.6, upvotes: 8, image: "/placeholder.svg?height=300&width=200" },
-  { id: 6, title: "Last Night in Soho", year: "2021", score: 7.1, upvotes: 18, image: "/placeholder.svg?height=300&width=200" },
-]
-
 export default function UpcomingMovies() {
   const [currentUpcoming, setCurrentUpcoming] = useState(0)
-  const [suggestedMovies, setSuggestedMovies] = useState(initialSuggestedMovies)
+  const [suggestedMovies, setSuggestedMovies] = useState<SuggestedMovie[]>([])
   const [votedMovies, setVotedMovies] = useState<number[]>([])
 
   useEffect(() => {
+    const loadSuggestedMovies = async () => {
+      try {
+        const movies = await fetchSuggestedMovies();
+        setSuggestedMovies(movies);
+      } catch (error) {
+        console.error('Error loading suggested movies:', error);
+        // Handle error (e.g., show error message to user)
+      }
+    };
+
+    loadSuggestedMovies();
+
     const storedVotes = localStorage.getItem('votedMovies')
     if (storedVotes) {
       setVotedMovies(JSON.parse(storedVotes))
@@ -63,25 +66,34 @@ export default function UpcomingMovies() {
     setCurrentUpcoming((prev) => (prev + 1) % upcomingMovies.length)
   }
 
-  const handleVote = (id: number) => {
-    setSuggestedMovies(prevMovies => 
-      prevMovies.map(movie => 
-        movie.id === id ? { ...movie, upvotes: votedMovies.includes(id) ? movie.upvotes - 1 : movie.upvotes + 1 } : movie
-      ).sort((a, b) => b.upvotes - a.upvotes)
-    )
+  const handleVote = async (id: number) => {
+    try {
+      const movie = suggestedMovies.find(m => m.id === id);
+      if (!movie) return;
 
-    setVotedMovies(prevVoted => {
-      const newVoted = votedMovies.includes(id)
-        ? prevVoted.filter(movieId => movieId !== id)
-        : [...prevVoted, id]
-      localStorage.setItem('votedMovies', JSON.stringify(newVoted))
-      return newVoted
-    })
+      const isVoted = votedMovies.includes(id);
+      const newVotes = await updateSuggestionVote(id, movie.votes, !isVoted);
+
+      setSuggestedMovies(prevMovies => 
+        prevMovies.map(movie => 
+          movie.id === id ? { ...movie, votes: newVotes } : movie
+        ).sort((a, b) => b.votes - a.votes)
+      );
+
+      const newVotedMovies = isVoted
+        ? votedMovies.filter(movieId => movieId !== id)
+        : [...votedMovies, id];
+
+      setVotedMovies(newVotedMovies);
+      localStorage.setItem('votedMovies', JSON.stringify(newVotedMovies));
+    } catch (error) {
+      console.error('Error updating vote:', error);
+      // Handle error (e.g., show error message to user)
+    }
   }
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
-
       <main className="container mx-auto px-4 py-12">
         <section className="mb-16">
           <h2 className="text-3xl font-bold mb-8 text-center">Next Upcoming Movie</h2>
@@ -123,18 +135,18 @@ export default function UpcomingMovies() {
               <Card key={movie.id} className="bg-gray-800 border-0 overflow-hidden group relative">
                 <CardContent className="p-0">
                   <Image
-                    src={movie.image}
-                    alt={movie.title}
+                    src={movie.movie.imageUrl || "/placeholder.svg?height=300&width=200"}
+                    alt={movie.movie.title}
                     width={200}
                     height={300}
                     className="w-full h-auto"
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-4 text-center">
-                    <h3 className="text-lg font-semibold mb-2 text-white hover:text-gray-300 transition-colors">{movie.title}</h3>
-                    <p className="text-sm text-white hover:text-gray-300 transition-colors mb-2">{movie.year}</p>
+                    <h3 className="text-lg font-semibold mb-2 text-white hover:text-gray-300 transition-colors">{movie.movie.title}</h3>
+                    <p className="text-sm text-white hover:text-gray-300 transition-colors mb-2">{movie.movie.year}</p>
                     <div className="flex items-center mb-3">
                       <Star className="h-4 w-4 text-white mr-1" />
-                      <span className="text-white hover:text-gray-300 transition-colors">{movie.score.toFixed(1)}</span>
+                      <span className="text-white hover:text-gray-300 transition-colors">{movie.movie.rating?.toFixed(1) || 'N/A'}</span>
                     </div>
                     <button 
                       className={`flex items-center justify-center bg-transparent hover:bg-gray-700 text-white font-semibold py-2 px-4 border ${
@@ -143,7 +155,7 @@ export default function UpcomingMovies() {
                       onClick={() => handleVote(movie.id)}
                     >
                       <ThumbsUp className={`h-4 w-4 mr-2 ${votedMovies.includes(movie.id) ? 'text-blue-500' : ''}`} />
-                      <span>{movie.upvotes}</span>
+                      <span>{movie.votes}</span>
                     </button>
                   </div>
                 </CardContent>

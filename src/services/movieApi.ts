@@ -187,4 +187,86 @@ export async function saveSuggestion(suggestion: {
   }
 }
 
+export type SuggestedMovie = {
+  id: number;
+  movie: WatchedMovie;
+  suggested_by: string;
+  reason: string;
+  votes: number;
+};
+
+export async function fetchSuggestedMovies(): Promise<SuggestedMovie[]> {
+  try {
+    const supabase = await getSupabaseClient();
+    const { data, error } = await supabase
+      .from('suggested_movies')
+      .select(`
+        id,
+        movie_id,
+        suggested_by,
+        reason,
+        votes,
+        movies (
+          id,
+          tmdb_id,
+          title,
+          rating,
+          image_url,
+          description,
+          director,
+          year,
+          genre
+        )
+      `)
+      .order('votes', { ascending: false });
+
+    if (error) throw error;
+
+    const formattedData: SuggestedMovie[] = data.map(item => ({
+      id: item.id,
+      movie: {
+        id: item.movies.id,
+        tmdbId: item.movies.tmdb_id,
+        title: item.movies.title,
+        rating: item.movies.rating,
+        imageUrl: item.movies.image_url,
+        watchDate: '', // This field is not relevant for suggested movies
+        description: item.movies.description,
+        director: item.movies.director,
+        year: item.movies.year,
+        genre: item.movies.genre,
+      },
+      suggested_by: item.suggested_by,
+      reason: item.reason,
+      votes: item.votes,
+    }));
+
+    return formattedData;
+  } catch (error) {
+    console.error('Error fetching suggested movies:', error);
+    throw new Error('Failed to fetch suggested movies');
+  }
+}
+
+export async function updateSuggestionVote(id: number, currentVotes: number, increment: boolean): Promise<number> {
+  try {
+    const supabase = await getSupabaseClient();
+    const newVotes = increment ? currentVotes + 1 : currentVotes - 1;
+
+    const { data, error } = await supabase
+      .from('suggested_movies')
+      .update({ votes: newVotes })
+      .eq('id', id)
+      .select('votes')
+      .single();
+
+    if (error) throw error;
+
+    return data.votes;
+  } catch (error) {
+    console.error('Error updating vote:', error);
+    throw new Error('Failed to update vote');
+  }
+}
+
 export default movieApi;
