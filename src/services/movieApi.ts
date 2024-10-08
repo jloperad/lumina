@@ -4,13 +4,6 @@ import { getSupabaseClient } from '@/lib/supabaseClient';
 const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 const BASE_URL = 'https://api.themoviedb.org/3';
 
-const movieApi = axios.create({
-  baseURL: BASE_URL,
-  params: {
-    api_key: API_KEY,
-  },
-});
-
 export type WatchedMovie = {
   id: number;
   tmdbId: number;
@@ -23,6 +16,83 @@ export type WatchedMovie = {
   year?: number;
   genre?: string;
 };
+
+export type SearchMovie = {
+  id: number;
+  tmdbId: number;
+  title: string;
+  vote_average: number;
+  poster_path: string | null;
+  overview: string;
+  release_date: string;
+  genre_ids: number[];
+  rating: number;
+  imageUrl: string;
+  watchDate: string;
+  description: string;
+  director: string;
+  year?: number;
+  genre?: string;
+};
+
+type SuggestedMovieRaw = {
+  id: number;
+  movie_id: number;
+  suggested_by: string;
+  reason: string;
+  votes: number;
+  movies: {
+    id: number;
+    tmdb_id: number;
+    title: string;
+    rating: number;
+    image_url: string;
+    description: string;
+    director: string;
+    year: number;
+    genre: string;
+  };
+};
+
+type PlannedMovieRaw = {
+  id: number;
+  planned_date: string;
+  reason: string; 
+  movies: {
+    id: number;
+    tmdb_id: number;
+    title: string;
+    rating: number;
+    image_url: string;
+    description: string;
+    director: string;
+    year: number;
+    genre: string;
+  };
+};
+
+export type SuggestedMovie = {
+  id: number;
+  movie: WatchedMovie;
+  suggested_by: string;
+  reason: string;
+  votes: number;
+};
+
+export type PlannedMovie = {
+  id: number;
+  movie: WatchedMovie;
+  planned_date: string;
+  reason: string; 
+};
+
+// API client
+const movieApi = axios.create({
+  baseURL: BASE_URL,
+  params: {
+    api_key: API_KEY,
+  },
+});
 
 export async function fetchWatchedMovies(): Promise<WatchedMovie[]> {
   const supabase = await getSupabaseClient();
@@ -65,24 +135,6 @@ export const getMovieDetails = async (id: string) => {
     }
   });
   return response.data;
-};
-
-export type SearchMovie = {
-  id: number;
-  tmdbId: number;
-  title: string;
-  vote_average: number;
-  poster_path: string | null;
-  overview: string;
-  release_date: string;
-  genre_ids: number[];
-  rating: number;
-  imageUrl: string;
-  watchDate: string;
-  description: string;
-  director: string;
-  year?: number;
-  genre?: string;
 };
 
 export async function searchMovies(query: string, year?: string): Promise<SearchMovie[]> {
@@ -187,14 +239,6 @@ export async function saveSuggestion(suggestion: {
   }
 }
 
-export type SuggestedMovie = {
-  id: number;
-  movie: WatchedMovie;
-  suggested_by: string;
-  reason: string;
-  votes: number;
-};
-
 export async function fetchSuggestedMovies(): Promise<SuggestedMovie[]> {
   try {
     const supabase = await getSupabaseClient();
@@ -222,11 +266,11 @@ export async function fetchSuggestedMovies(): Promise<SuggestedMovie[]> {
 
     if (error) throw error;
 
-    const formattedData: SuggestedMovie[] = data.map(item => ({
-      id: item.id,
+    const formattedData: SuggestedMovie[] = (data as unknown as SuggestedMovieRaw[]).map(item => ({
+      id: Number(item.id),
       movie: {
-        id: item.movies.id,
-        tmdbId: item.movies.tmdb_id,
+        id: Number(item.movies.id),
+        tmdbId: Number(item.movies.tmdb_id),
         title: item.movies.title,
         rating: item.movies.rating,
         imageUrl: item.movies.image_url,
@@ -238,7 +282,7 @@ export async function fetchSuggestedMovies(): Promise<SuggestedMovie[]> {
       },
       suggested_by: item.suggested_by,
       reason: item.reason,
-      votes: item.votes,
+      votes: Number(item.votes),
     }));
 
     return formattedData;
@@ -262,10 +306,60 @@ export async function updateSuggestionVote(id: number, currentVotes: number, inc
 
     if (error) throw error;
 
-    return data.votes;
+    return Number(data.votes);
   } catch (error) {
     console.error('Error updating vote:', error);
     throw new Error('Failed to update vote');
+  }
+}
+
+export async function fetchPlannedMovies(): Promise<PlannedMovie[]> {
+  try {
+    const supabase = await getSupabaseClient();
+    const { data, error } = await supabase
+      .from('planned_movies')
+      .select(`
+        id,
+        planned_date,
+        reason,
+        movies (
+          id,
+          tmdb_id,
+          title,
+          rating,
+          image_url,
+          description,
+          director,
+          year,
+          genre
+        )
+      `)
+      .order('planned_date', { ascending: true });
+
+    if (error) throw error;
+
+    const formattedData: PlannedMovie[] = (data as unknown as PlannedMovieRaw[]).map(item => ({
+      id: Number(item.id),
+      planned_date: String(item.planned_date),
+      reason: String(item.reason),
+      movie: {
+        id: Number(item.movies.id),
+        tmdbId: Number(item.movies.tmdb_id),
+        title: String(item.movies.title),
+        rating: Number(item.movies.rating),
+        imageUrl: String(item.movies.image_url),
+        watchDate: '', // This field is not relevant for planned movies
+        description: String(item.movies.description),
+        director: String(item.movies.director),
+        year: Number(item.movies.year),
+        genre: String(item.movies.genre),
+      },
+    }));
+
+    return formattedData;
+  } catch (error) {
+    console.error('Error fetching planned movies:', error);
+    throw new Error('Failed to fetch planned movies');
   }
 }
 
