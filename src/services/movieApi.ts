@@ -144,6 +144,7 @@ export async function searchMovies(query: string, year?: string): Promise<Search
         query,
         include_adult: false,
         year: year || undefined,
+        language: 'es-ES', 
       },
     });
 
@@ -163,7 +164,7 @@ export async function searchMovies(query: string, year?: string): Promise<Search
         : '/placeholder.svg?height=300&width=200',
       watchDate: '',
       description: movie.overview,
-      director: '',
+      director: movie.director || '',
       year: movie.release_date ? parseInt(movie.release_date.split('-')[0]) : undefined,
       genre: movie.genre_ids ? movie.genre_ids.join(', ') : undefined,
       vote_average: movie.vote_average,
@@ -210,6 +211,7 @@ export async function saveSuggestion(suggestion: {
           rating: suggestion.movie.rating,
           image_url: suggestion.movie.imageUrl,
           description: suggestion.movie.description,
+          director: suggestion.movie.director,
           year: suggestion.movie.year,
           genre: suggestion.movie.genre,
         })
