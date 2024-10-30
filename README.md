@@ -1,5 +1,9 @@
 # Lumina Film Club
 
+![Lumina Films](/public/Lumina-home.png)
+
+Live at [Lumina Films](https://lumina-films.vercel.app/)
+
 ## Overview
 Lumina Film Club is a web application designed to manage and organize a film club's activities. It allows members to track watched movies, suggest new films, and plan upcoming screenings. The platform serves as a central hub for film enthusiasts to engage with their community and discover new cinema.
 
